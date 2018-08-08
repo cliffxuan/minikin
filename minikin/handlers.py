@@ -41,7 +41,8 @@ async def shorten_url(request) -> web.Response:
             charset='utf8',
             body=json.dumps({'error': error})
         )
-    if not validate_url(url):
+    is_valid, url = validate_url(url)
+    if not is_valid:
         return web.Response(
             status=400,
             content_type='application/json',

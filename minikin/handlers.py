@@ -35,28 +35,13 @@ async def shorten_url(request) -> web.Response:
     except (json.decoder.JSONDecodeError, KeyError):
         example = '{"url": "www.helloworld.com"}'
         error = f'invalid request body {body}, expected format {example}'
-        return web.Response(
-            status=400,
-            content_type='application/json',
-            charset='utf8',
-            body=json.dumps({'error': error})
-        )
-    is_valid, url = validate_url(url)
-    if not is_valid:
-        return web.Response(
-            status=400,
-            content_type='application/json',
-            charset='utf8',
-            body=json.dumps({
-                'error': f'cannot shorten an invalid url {url}'
-            })
-        )
+        return web.json_response({'error': error}, status=400)
+    try:
+        url = validate_url(url)
+    except ValueError:
+        return web.json_response(
+            {'error': f'cannot shorten an invalid url {url}'}, status=400)
     settings = request.app['settings']
     shortened = await db.shorten_url(
         request.app['pool'], url, settings['length'], settings['base_url'])
-    return web.Response(
-        status=201,
-        content_type='application/json',
-        charset='utf8',
-        body=json.dumps({'shortened_url': shortened})
-    )
+    return web.json_response({'shortened_url': shortened}, status=201)

@@ -4,7 +4,6 @@ utility functions
 """
 import hashlib
 import string
-from typing import Tuple
 from urllib.parse import urlparse
 
 import validators
@@ -33,7 +32,7 @@ def generate_slug(text: str, size: int) -> str:
     return encoded[:size]
 
 
-def validate_url(url: str) -> Tuple[bool, str]:
+def validate_url(url: str) -> str:
     """
     validate url. steps:
     1. if url scheme is missing, use http.
@@ -41,4 +40,6 @@ def validate_url(url: str) -> Tuple[bool, str]:
     """
     if urlparse(url).scheme == '':
         url = f'http://{url}'
-    return validators.url(url), url
+    if not validators.url(url):
+        raise ValueError
+    return url

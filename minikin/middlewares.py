@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-middle wares
+middlewares
 """
 import logging
-import json
 
 from aiohttp import web
 
@@ -14,31 +13,25 @@ logger = logging.getLogger('root')
 def create_error_middleware(overrides):
 
     @web.middleware
-    async def error_middleware(request, handler):
+    async def _error_middleware(request, handler):
         try:
             return await handler(request)
         except web.HTTPException as exc:
             try:
                 return await overrides[exc.status](request)
             except KeyError:
-                raise
+                return web.json_response(
+                    {'error': exc.text}, status=exc.status)
         except Exception:
-            try:
-                return await overrides[500](request)
-            except KeyError:
-                raise
+            return await overrides[500](request)
 
-    return error_middleware
+    return _error_middleware
 
 
 async def handle_404(request) -> web.Response:
     """json response for 404 Not Found"""
-    return web.Response(
-        status=404,
-        content_type='application/json',
-        charset='utf8',
-        body=json.dumps({'error': f'cannot find url for {request.url}'})
-    )
+    return web.json_response(
+        {'error': f'cannot find url {request.url}'}, status=404)
 
 
 async def handle_500(request) -> web.Response:
@@ -49,12 +42,7 @@ async def handle_500(request) -> web.Response:
         'unepxected error for handling request=%s headers=%s body=%s',
         request, request.headers, body
     )
-    return web.Response(
-        status=500,
-        content_type='application/json',
-        charset='utf8',
-        body=json.dumps({'error': error})
-    )
+    return web.json_response({'error': error}, status=500)
 
 
 error_middleware = create_error_middleware({

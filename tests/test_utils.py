@@ -47,4 +47,5 @@ def test_valid_url(url):
     'abc def',
 ])
 def test_invalid_url(url):
-    assert not validate_url(url)
+    with pytest.raises(ValueError):
+        validate_url(url)

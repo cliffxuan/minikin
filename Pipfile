@@ -6,11 +6,14 @@ name = "pypi"
 [packages]
 aiohttp = "*"
 asyncpg = "*"
+validators = "*"
 
 [dev-packages]
 pytest = "*"
 "flake8" = "*"
 mypy = "*"
+pytest-aiohttp = "*"
+pytest-cov = "*"
 
 [requires]
 python_version = "3.6"

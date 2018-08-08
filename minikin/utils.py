@@ -4,9 +4,12 @@ utility functions
 """
 import hashlib
 import string
+from urllib.parse import urlparse
+
+import validators
 
 
-def base62_encode(num: int):
+def base62_encode(num: int) -> str:
     """
     Encode a positive number using 62 characters 0-1a-zA-Z
     """
@@ -20,18 +23,21 @@ def base62_encode(num: int):
             return ''.join(reversed(result))
 
 
-def generate_slug(url: str, size: int):
+def generate_slug(text: str, size: int) -> str:
     """
-    generate slug from a url
+    generate slug from a string
     """
-    hash_num = int(hashlib.md5(url.encode('utf-8')).hexdigest(), 16)
+    hash_num = int(hashlib.md5(text.encode('utf-8')).hexdigest(), 16)
     encoded = base62_encode(hash_num)
     return encoded[:size]
 
 
 def validate_url(url: str) -> bool:
     """
-    validate url
+    validate url. steps:
+    1. if url scheme is missing, use http.
+    2. use valilidators.url to validate
     """
-    # TODO implement me
-    return True
+    if urlparse(url).scheme == '':
+        url = f'http://{url}'
+    return validators.url(url)

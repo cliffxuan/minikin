@@ -10,5 +10,4 @@ CREATE TABLE short_url (
     url TEXT,
     PRIMARY KEY (slug)
 );
-CREATE INDEX slug_idx ON short_url (slug);
 EOF

@@ -7,37 +7,11 @@ import json
 
 from aiohttp import web
 
-from utils import validate_url
-import db
+from .utils import validate_url
+from . import db
 
 
 logger = logging.getLogger('root')
-
-
-async def handle_404(request) -> web.Response:
-    """json response for 404 Not Found"""
-    return web.Response(
-        status=404,
-        content_type='application/json',
-        charset='utf8',
-        body=json.dumps({'error': f'cannot find url for {request.url}'})
-    )
-
-
-async def handle_500(request) -> web.Response:
-    """json response for 500 Internal Error"""
-    error = f'sorry, an unexpected error occurred. we are notified.'
-    body = await request.text()
-    logger.exception(
-        'unepxected error for handling request=%s headers=%s body=%s',
-        request, request.headers, body
-    )
-    return web.Response(
-        status=500,
-        content_type='application/json',
-        charset='utf8',
-        body=json.dumps({'error': error})
-    )
 
 
 async def get_url(request) -> web.Response:
@@ -50,7 +24,7 @@ async def get_url(request) -> web.Response:
             body=json.dumps({'location': url})
         )
     except db.URLNotFound:
-        raise web.HTTPNotFound()
+        raise web.HTTPNotFound
 
 
 async def shorten_url(request) -> web.Response:

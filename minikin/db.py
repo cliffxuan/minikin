@@ -4,7 +4,7 @@ database operations
 """
 from asyncpg.pool import Pool
 
-from utils import generate_slug
+from .utils import generate_slug
 
 
 class URLNotFound(Exception):
@@ -13,13 +13,16 @@ class URLNotFound(Exception):
     """
 
 
-async def shorten_url(pool: Pool, url: str, size: int, base: str):
+async def shorten_url(pool: Pool, url: str, size: int, base: str) -> str:
     """
     shorten url
     """
     slug = generate_slug(url, size)
     async with pool.acquire() as connection:
         async with connection.transaction():
+            # do an upsert and ignore hash collision as the probability
+            # is extremely low, however, if collision is to be eliminated
+            # completely, it can be done in sacrifice of efficiency.
             await connection.execute(
                 '''
                 INSERT INTO short_url(slug, url)

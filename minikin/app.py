@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+"""
+entry point of the application
+"""
 import argparse
 import logging
 import logging.config
@@ -8,7 +11,7 @@ import asyncio
 import asyncpg
 from aiohttp import web
 
-import handlers
+from minikin import handlers, middlewares
 
 
 def get_logger() -> logging.Logger:
@@ -50,26 +53,6 @@ def get_logger() -> logging.Logger:
 logger = get_logger()
 
 
-def create_error_middleware(overrides):
-
-    @web.middleware
-    async def error_middleware(request, handler):
-        try:
-            return await handler(request)
-        except web.HTTPException as exc:
-            try:
-                return await overrides[exc.status](request)
-            except KeyError:
-                raise
-        except Exception:
-            try:
-                return await overrides[500](request)
-            except KeyError:
-                raise
-
-    return error_middleware
-
-
 async def init_app(database, user, length, base_url):
     app = web.Application()
     app['settings'] = {'length': length, 'base_url': base_url}
@@ -77,11 +60,7 @@ async def init_app(database, user, length, base_url):
         database=database, user=user)
     app.router.add_get(r'/{slug:[0-9a-zA-z]{%d}}' % length, handlers.get_url)
     app.router.add_post('/shorten_url', handlers.shorten_url)
-    error_middleware = create_error_middleware({
-        404: handlers.handle_404,
-        500: handlers.handle_500
-    })
-    app.middlewares.append(error_middleware)
+    app.middlewares.append(middlewares.error_middleware)
     return app
 
 

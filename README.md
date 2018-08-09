@@ -176,7 +176,7 @@ Load balancing and traffic routing and will not only increase the capacity but a
 - Geopromixity routing - route traffic based on location of the resource
 - Latency routing - route traffic to server which provides the best latency
 
-### database strategy
+### scale database
 
 Data and accessing of data can be split so each sub system can only deal with a partition of the data.
 

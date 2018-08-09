@@ -5,7 +5,7 @@ from unittest.mock import Mock, patch
 
 from aiohttp import web
 
-from minikin.handlers import get_url, shorten_url
+from minikin.handlers import get_url, shorten_url, index
 from minikin.db import URLNotFound
 
 
@@ -82,3 +82,13 @@ async def test_shorten_url_body_correct_json_valid_url(aiohttp_client):
     assert rsp.status == 201
     data = await rsp.json()
     assert data['shortened_url'] == shortened
+
+
+async def test_index(aiohttp_client):
+    app = web.Application()
+    app.router.add_get('/', index)
+    client = await aiohttp_client(app)
+    rsp = await client.get('/')
+    assert rsp.status == 200
+    assert rsp.content_type == 'text/html'
+    assert rsp.charset == 'utf8'

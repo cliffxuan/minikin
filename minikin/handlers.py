@@ -4,6 +4,7 @@ http handlers
 """
 import logging
 import json
+import os
 
 from aiohttp import web
 
@@ -45,3 +46,13 @@ async def shorten_url(request) -> web.Response:
     shortened = await db.shorten_url(
         request.app['pool'], url, settings['length'], settings['base_url'])
     return web.json_response({'shortened_url': shortened}, status=201)
+
+
+async def index(request) -> web.Response:
+    with open(os.path.join(os.path.dirname(__file__), '../index.html')) as fo:
+        return web.Response(
+            status=200,
+            body=fo.read(),
+            content_type='text/html',
+            charset='utf8'
+        )

@@ -57,8 +57,10 @@ async def init_app(database, user, length, base_url):
     app = web.Application()
     app['settings'] = {'length': length, 'base_url': base_url}
     app['pool'] = await asyncpg.create_pool(database=database, user=user)
+    app.router.add_get('/', handlers.index)
+    app.router.add_static('/static', 'static')
     app.router.add_get(r'/{slug:[0-9a-zA-z]{%d}}' % length, handlers.get_url)
-    app.router.add_post('/shorten_url', handlers.shorten_url)
+    app.router.add_get('/shorten_url', handlers.shorten_url)
     app.middlewares.append(middlewares.error_middleware)
     return app
 

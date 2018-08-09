@@ -1,6 +1,8 @@
 # minikin
 [![Build Status](https://travis-ci.org/cliffxuan/minikin.svg?branch=master)](https://travis-ci.org/cliffxuan/minikin) ![Open Source Licence](https://img.shields.io/github/license/cliffxuan/minikin.svg) [![Test Coverage](https://api.codeclimate.com/v1/badges/05a36da8519e15658e1c/test_coverage)](https://codeclimate.com/github/cliffxuan/minikin/test_coverage) [![Maintainability](https://api.codeclimate.com/v1/badges/05a36da8519e15658e1c/maintainability)](https://codeclimate.com/github/cliffxuan/minikin/maintainability)
-
+<p align="center">
+  <a href="https://minik.in"><img width="240" height="240" src="./logo.png"></a>
+</p>
 Minikin is a url shortner built in Python using asyncio. It's small in footprint, performant with little resources and yet can scale up big.
 
 ## How to use

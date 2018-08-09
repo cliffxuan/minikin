@@ -1,4 +1,4 @@
-# minikin [![Build Status](https://travis-ci.org/cliffxuan/minikin.svg?branch=master)](https://travis-ci.org/cliffxuan/minikin)
+# minikin [![Build Status](https://travis-ci.org/cliffxuan/minikin.svg?branch=master)](https://travis-ci.org/cliffxuan/minikin) ![Open Source Licence](https://img.shields.io/github/license/cliffxuan/minikin.svg)
 
 Minikin is a url shortner built in Python using asyncio. It's small in footprint, performant with little resources and yet can scale up big.
 

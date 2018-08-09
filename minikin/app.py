@@ -74,6 +74,8 @@ def argument_parser():
         '--length', help='length of the short url path', type=int, default=7)
     parser.add_argument(
         '--base-url', help='base url', default='http://localhost:8080')
+    parser.add_argument('--path', help='path', default=None)
+    parser.add_argument('--port', help='port', default=None)
     return parser
 
 
@@ -83,7 +85,7 @@ def main(argv=None):
     app = loop.run_until_complete(
         init_app(args.database, args.user, args.length, args.base_url)
     )
-    web.run_app(app)
+    web.run_app(app, path=args.path, port=args.port)
 
 
 if __name__ == '__main__':

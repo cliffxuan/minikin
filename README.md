@@ -3,7 +3,7 @@
 <p align="center">
   <a href="https://minik.in"><img width="240" height="240" src="./static/logo.png"></a>
 </p>
-Minikin is a url shortner built in Python using asyncio. It's small in footprint, performant with little resources and yet can scale up big.
+Minikin is a url shortener built in Python with asyncio. It's small in footprint, performant with little resources and yet can scale up big.
 
 ## How to use
 
@@ -66,6 +66,7 @@ CREATE TABLE short_url (
     url TEXT,
     PRIMARY KEY (slug)
 );
+EOF
 ```
 
 - start the server
@@ -101,7 +102,7 @@ The hashing algorithm ensures the process is deterministic. 7 characters from 62
 
 ### conflict and hash collision
 
-Hash collision is not protected. If two urls result in the same hash, the later will override the former. Because the chance of collision is really small, the overhead is not justified. This is also because url shortening is now a life and death business.
+Hash collision is not protected. If two urls hash into the same string, the latter will override the former. Because the chance of collision is really small, the overhead is not justified. This is also because url shortening is not critical that losing a url would not cause a big loss.
 
 Also because the process is deterministic, the system doesn't check if the url already exists in the database and always performs an upsert.
 

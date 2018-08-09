@@ -9,6 +9,7 @@ import logging.config
 
 import asyncio
 import asyncpg
+import uvloop
 from aiohttp import web
 
 from minikin import handlers, middlewares
@@ -83,6 +84,7 @@ def argument_parser():
 
 def main(argv=None):
     args = argument_parser().parse_args(argv)
+    asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
     loop = asyncio.get_event_loop()
     app = loop.run_until_complete(
         init_app(args.database, args.user, args.length, args.base_url)

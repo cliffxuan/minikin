@@ -8,6 +8,7 @@ aiohttp = "*"
 asyncpg = "*"
 validators = "*"
 minikin = {editable = true, path = "."}
+uvloop = "*"
 
 [dev-packages]
 pytest = "*"

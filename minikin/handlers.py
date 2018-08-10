@@ -31,6 +31,7 @@ async def get_url(request) -> web.Response:
 async def shorten_url(request) -> web.Response:
     """convert a long url from json body into a short url"""
     body = await request.text()
+    logger.info(body)
     try:
         url = json.loads(body)['url']
     except (json.decoder.JSONDecodeError, KeyError):

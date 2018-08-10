@@ -16,6 +16,8 @@ pytest = "*"
 mypy = "*"
 pytest-aiohttp = "*"
 pytest-cov = "*"
+locustio = "*"
+faker = "*"
 
 [requires]
 python_version = "3.6"

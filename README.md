@@ -131,12 +131,12 @@ locust -f tests/load/locustfile.py --host=https://minik.in
 
 Load profile:
 
-* number of urls in db: 30k
-* number of concurrent users: 2,000 
-* traffic distribution
-	- 10% POST /shorten_url
-	- 10% GET /[NOT FOUND]
-	- 80% GET /[FOUND]
+- number of urls in db: 30k
+- number of concurrent users: 2,000
+- traffic distribution
+    * 10% POST /shorten_url
+    * 10% GET /[NOT FOUND]
+    * 80% GET /[FOUND]
 
 The machine under test:
 
@@ -151,10 +151,10 @@ The machine under test:
 
 Result:
 
-* RPS: around 250
-* Error rate: around 1% all of which are connection errors
-* CPU utilisation: 30% - 80%
-* RAM: around 500MB
+- RPS: around 250
+- Error rate: around 1% all of which are connection errors
+- CPU utilisation: 30% - 80%
+- RAM: around 500MB
 
 ## Scale up and out
 

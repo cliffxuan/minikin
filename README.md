@@ -57,7 +57,7 @@ This requires python3.6 and above.
 `pipenv install`
 
 - create postgresql database and table
-Only one table with two columns are used. The slug, i.e. the path of the short url is the primary key and is indexed.
+One table with two columns (slug and url) are the minimum needed. The slug, i.e. the path of the short url is the primary key and is indexed.
 ```
 createdb -U postgres minikin
 psql -U postgres minikin <<EOF
@@ -116,9 +116,27 @@ Event driven async socket is used instead of multi threading because it is in th
 A relational database in Postgresql is picked instead of a NoSQL database. This is mainly because Postgresql is one of the better supported databases for asyncio/aiohttp and also there are repeated reports of Postgresql out performing NoSQL database. A key value store in theory should be better for the system.
 
 
-## Benchmark
+## Load Test Benchmark
 
 Some very simple load testing has been done using [wrk](https://github.com/wg/wrk).
+Load test uses [Locust](https://locust.io/)
+
+
+start the load test:
+```
+locust -f tests/load/locustfile.py --host=https://minik.in
+```
+
+<img src="benchmark.png"/>
+
+Load profile:
+
+* number of urls in db: 30k
+* number of concurrent users: 2,000 
+* traffic distribution
+	- 10% POST /shorten_url
+	- 10% GET /[NOT FOUND]
+	- 80% GET /[FOUND]
 
 The machine under test:
 
@@ -131,34 +149,14 @@ The machine under test:
 - Number of processes: 4
 - Reverse proxy server: Nginx
 
-machine on Google Compute Engine costing around $40/month with 1 vCPU, 3.75GB RAM and 30GB of SSD hard drive.
+Result:
 
-A typical test with 40 threads and 1,000 connections achieves 432.03 Reqests/sec.
+* RPS: around 250
+* Error rate: around 1% all of which are connection errors
+* CPU utilisation: 30% - 80%
+* RAM: around 500MB
 
-```
-wrk -t40 -c1000 -d30s https://minik.in/6ypXVDH
-Running 30s test @ https://minik.in/6ypXVDH
-  40 threads and 1000 connections
-  Thread Stats   Avg      Stdev     Max   +/- Stdev
-    Latency   712.46ms  306.29ms   2.00s    71.32%
-    Req/Sec    13.32      9.27    68.00     70.60%
-  13003 requests in 30.10s, 4.85MB read
-  Socket errors: connect 1499, read 7383, write 0, timeout 353
-  Non-2xx or 3xx responses: 135
-Requests/sec:    432.02
-Transfer/sec:    164.88KB
-```
-
-The limitation of the tests are:
-
-- only hitting one url
-- only reading no writing
-- not enough urls in the database
-- requests are all from the same geo location
-
-A more sophisticated benchmark emulating real world traffic pattern will be done using [locast](https://locust.io/).
-
-## Scale up
+## Scale up and out
 
 Because the state is not shared and the shortening process is determnistic, it can be easily scaled up. several instruments can be used independantly or collectively.
 

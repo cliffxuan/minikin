@@ -80,7 +80,7 @@ EOF
 
 ## Running Test
 
-Automated tests are run on [https://travis-ci.org/cliffxuan/minikin](https://travis-ci.org/cliffxuan/minikin) on travis-ci.
+Automated tests are run on travis-ci [https://travis-ci.org/cliffxuan/minikin](https://travis-ci.org/cliffxuan/minikin).
 
 These are 3 types tests currently and integration test will be added later.
 - unittest
@@ -118,9 +118,7 @@ A relational database in Postgresql is picked instead of a NoSQL database. This 
 
 ## Load Test Benchmark
 
-Some very simple load testing has been done using [wrk](https://github.com/wg/wrk).
-Load test uses [Locust](https://locust.io/)
-
+Load test uses [Locust](https://locust.io/). The script are defined as [locustfile.py](tests/load/locustfile.py).
 
 start the load test:
 ```
@@ -151,7 +149,7 @@ The machine under test:
 
 Result:
 
-- RPS: around 250
+- Request Per Second: it servers around 400 when the concurrent user number is less than 1000. at 2000 it's between 200 and 250.
 - Error rate: around 1% all of which are connection errors
 - CPU utilisation: 30% - 80%
 - RAM: around 500MB
@@ -160,9 +158,9 @@ Result:
 
 Because the state is not shared and the shortening process is determnistic, it can be easily scaled up. several instruments can be used independantly or collectively.
 
-### spend more on better hardware
+### get better hardware
 
-During the simple benchmark, CPU is already throttled. Increasing the CPU should have an immediate impact. With more data, bigger RAM and hard drive will also boost the performance.
+Increasing the number of CPU should have an immediate impact. With more data, bigger RAM and hard drive will also boost the performance.
 
 ### traffic routing
 

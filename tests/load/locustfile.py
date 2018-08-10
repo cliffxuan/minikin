@@ -30,7 +30,7 @@ class Tasks(TaskSet):
             if response.status_code == 404:
                 response.success()
 
-    @task(9)
+    @task(8)
     def found(self):
         slug = choice(slugs).strip()
         self.client.get(f'/{slug}', name='/[found]', allow_redirects=False)

@@ -13,6 +13,7 @@ async def test_get_url_with_url_exists(aiohttp_client):
     app = web.Application()
     app.router.add_get('/{slug:[0-9a-zA-z]{3}}', get_url)
     app['pool'] = Mock()
+    app['redis'] = Mock()
     client = await aiohttp_client(app)
     future = asyncio.Future()
     dest = 'https://minik.in'
@@ -27,6 +28,7 @@ async def test_get_url_with_url_not_exists(aiohttp_client):
     app = web.Application()
     app.router.add_get('/{slug:[0-9a-zA-z]{3}}', get_url)
     app['pool'] = Mock()
+    app['redis'] = Mock()
     client = await aiohttp_client(app)
     future = asyncio.Future()
     with patch('minikin.handlers.db.get_url', return_value=future):
@@ -38,15 +40,15 @@ async def test_get_url_with_url_not_exists(aiohttp_client):
 async def test_shorten_url_body_correct_json_invalid_url(aiohttp_client):
     app = web.Application()
     app['pool'] = Mock()
+    app['redis'] = Mock()
     app['settings'] = {'length': 3, 'base_url': 'https://minik.in'}
     app.router.add_post('/', shorten_url)
     client = await aiohttp_client(app)
     future = asyncio.Future()
-    shortened = 'https://minik.in/abc'
     with patch('minikin.handlers.db.shorten_url', return_value=future):
-        future.set_result(shortened)
+        future.set_result(None)
         rsp = await client.post('/', data=json.dumps(
-            {'url': 'hello world'}))
+            {'url': 'not a valid url'}))
     assert rsp.status == 400
 
 
@@ -68,20 +70,22 @@ async def test_shorten_url_body_wrong_format_json(aiohttp_client):
 
 
 async def test_shorten_url_body_correct_json_valid_url(aiohttp_client):
+    base_url = 'https://minik.in'
     app = web.Application()
     app['pool'] = Mock()
-    app['settings'] = {'length': 3, 'base_url': 'https://minik.in'}
+    app['redis'] = Mock()
+    app['settings'] = {'length': 3, 'base_url': base_url}
     app.router.add_post('/', shorten_url)
     client = await aiohttp_client(app)
     future = asyncio.Future()
-    shortened = 'https://minik.in/abc'
+    slug = 'abc'
     with patch('minikin.handlers.db.shorten_url', return_value=future):
-        future.set_result(shortened)
+        future.set_result(slug)
         rsp = await client.post('/', data=json.dumps(
             {'url': 'https://helloworld.com'}))
     assert rsp.status == 201
     data = await rsp.json()
-    assert data['shortened_url'] == shortened
+    assert data['shortened_url'] == f'{base_url}/{slug}'
 
 
 async def test_index(aiohttp_client):

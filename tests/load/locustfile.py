@@ -11,7 +11,7 @@ from minikin.utils import generate_slug
 fake = Faker()
 PWD = os.path.abspath(os.path.dirname(__file__))
 with open(os.path.join(PWD, 'slugs')) as fo:
-    slugs = fo.readlines()[2:]  # ommit the first two header lines
+    slugs = fo.readlines()[2:-1]  # ommit header and footer
 
 
 class Tasks(TaskSet):

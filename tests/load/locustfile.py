@@ -8,21 +8,26 @@ from locust import HttpLocust, TaskSet, task
 
 from minikin.utils import generate_slug
 
-fake = Faker()
 PWD = os.path.abspath(os.path.dirname(__file__))
 with open(os.path.join(PWD, 'slugs')) as fo:
     slugs = fo.readlines()[2:-1]  # ommit header and footer
+
+
+def gen_url():
+    fake = Faker()
+    uri, slug = fake.uri().rstrip('/'), fake.slug()
+    return f'{uri}#{slug}'
 
 
 class Tasks(TaskSet):
 
     @task(1)
     def shorten_url(self):
-        self.client.post("/shorten_url", json.dumps({"url": fake.uri()}))
+        self.client.post("/shorten_url", json.dumps({"url": gen_url()}))
 
     @task(1)
     def not_found(self):
-        slug = generate_slug(fake.uri(), 7)
+        slug = generate_slug(gen_url(), 7)
         with self.client.get(f'/{slug}',
                              name='/[not-found]',
                              catch_response=True,
@@ -38,3 +43,5 @@ class Tasks(TaskSet):
 
 class User(HttpLocust):
     task_set = Tasks
+    min_wait = 0
+    max_wait = 0

@@ -17,6 +17,14 @@ class URLNotFound(Exception):
     """
 
 
+async def write_to_redis_if_exists(key, value, redis: Redis=None):
+    if redis:
+        try:
+            await redis.set(key, value)
+        except Exception:
+            logger.warning('error set cache key=%s value=%s', key, value)
+
+
 async def shorten_url(
         pool: Pool, url: str, size: int, redis: Redis=None) -> str:
     """
@@ -35,11 +43,7 @@ async def shorten_url(
                 ON CONFLICT (slug) DO NOTHING;
                 ''', slug, url
             )
-    if redis:
-        try:
-            await redis.set(slug, url)
-        except Exception:
-            logger.warning('error set cache key=%s value=%s', slug, url)
+    write_to_redis_if_exists(slug, url, redis)
     return slug
 
 
@@ -58,4 +62,5 @@ async def get_url(pool: Pool, slug: str, redis: Redis=None) -> str:
             'SELECT * FROM short_url WHERE slug = $1', slug)
         if not record:
             raise URLNotFound(slug)
+        write_to_redis_if_exists(slug, url, redis)
         return record['url']

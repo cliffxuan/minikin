@@ -1,3 +1,4 @@
 output.log
 .venv/
 .mypy_cache/
+.pytest_cache/

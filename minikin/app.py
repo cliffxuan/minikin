@@ -60,7 +60,7 @@ async def init_app(database, user, redis_uri, length, base_url):
     app['settings'] = {'length': length, 'base_url': base_url}
     app['pool'] = await asyncpg.create_pool(database=database, user=user)
     app['redis'] = await aioredis.create_redis_pool(
-        redis_uri, encoding='utf-8', minsize=5, maxsize=10)
+        redis_uri, encoding='utf-8')
     app.router.add_get('/', handlers.index)
     app.router.add_static('/static', 'static')
     app.router.add_get(r'/{slug:[0-9a-zA-z]{%d}}' % length, handlers.get_url)

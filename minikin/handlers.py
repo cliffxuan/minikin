@@ -17,15 +17,16 @@ logger = logging.getLogger('root')
 
 async def get_url(request) -> web.Response:
     """redirect to the destination url from the short url"""
+    slug = request.match_info['slug']
     try:
-        url = await db.get_url(request.app['pool'], request.match_info['slug'])
-        return web.HTTPFound(
-            location=url,
-            content_type='application/json',
-            body=json.dumps({'location': url})
-        )
+        url = await db.get_url(request.app['pool'], slug, request.app['redis'])
     except db.URLNotFound:
         raise web.HTTPNotFound
+    return web.HTTPFound(
+        location=url,
+        content_type='application/json',
+        body=json.dumps({'location': url})
+    )
 
 
 async def shorten_url(request) -> web.Response:
@@ -44,9 +45,10 @@ async def shorten_url(request) -> web.Response:
         return web.json_response(
             {'error': f'cannot shorten an invalid url {url}'}, status=400)
     settings = request.app['settings']
-    shortened = await db.shorten_url(
-        request.app['pool'], url, settings['length'], settings['base_url'])
-    return web.json_response({'shortened_url': shortened}, status=201)
+    slug = await db.shorten_url(
+        request.app['pool'], url, settings['length'], request.app['redis'])
+    shortened_url = f'{settings["base_url"]}/{slug}'
+    return web.json_response({'shortened_url': shortened_url}, status=201)
 
 
 async def index(request) -> web.Response:

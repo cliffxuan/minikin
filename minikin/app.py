@@ -7,6 +7,7 @@ import argparse
 import logging
 import logging.config
 
+import aioredis
 import asyncio
 import asyncpg
 import uvloop
@@ -29,12 +30,12 @@ def get_logger() -> logging.Logger:
         },
         'handlers': {
             'console': {
-                'level': 'DEBUG',
+                'level': 'INFO',
                 'class': 'logging.StreamHandler',
                 'formatter': 'simple'
             },
             'file': {
-                'level': 'DEBUG',
+                'level': 'INFO',
                 'class': 'logging.FileHandler',
                 'filename': 'output.log',
                 'formatter': 'simple'
@@ -43,7 +44,7 @@ def get_logger() -> logging.Logger:
         'loggers': {
             'root': {
                 'handlers': ['console', 'file'],
-                'level': 'DEBUG'
+                'level': 'INFO'
             }
         }
     }
@@ -54,10 +55,12 @@ def get_logger() -> logging.Logger:
 logger = get_logger()
 
 
-async def init_app(database, user, length, base_url):
+async def init_app(database, user, redis_uri, length, base_url):
     app = web.Application()
     app['settings'] = {'length': length, 'base_url': base_url}
     app['pool'] = await asyncpg.create_pool(database=database, user=user)
+    app['redis'] = await aioredis.create_redis_pool(
+        redis_uri, encoding='utf-8')
     app.router.add_get('/', handlers.index)
     app.router.add_static('/static', 'static')
     app.router.add_get(r'/{slug:[0-9a-zA-z]{%d}}' % length, handlers.get_url)
@@ -79,6 +82,9 @@ def argument_parser():
         '--base-url', help='base url', default='http://localhost:8080')
     parser.add_argument('--path', help='path', default=None)
     parser.add_argument('--port', help='port', default=None)
+    parser.add_argument(
+        '--redis', '-r', help='redis uri', dest='redis_uri',
+        default='redis://localhost')
     return parser
 
 
@@ -87,7 +93,8 @@ def main(argv=None):
     asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
     loop = asyncio.get_event_loop()
     app = loop.run_until_complete(
-        init_app(args.database, args.user, args.length, args.base_url)
+        init_app(args.database, args.user, args.redis_uri,
+                 args.length, args.base_url)
     )
     web.run_app(app, path=args.path, port=args.port)
 

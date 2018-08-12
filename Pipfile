@@ -9,6 +9,7 @@ asyncpg = "*"
 validators = "*"
 minikin = {editable = true, path = "."}
 uvloop = "*"
+aioredis = "*"
 
 [dev-packages]
 pytest = "*"

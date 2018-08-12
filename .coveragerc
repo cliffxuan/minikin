@@ -2,3 +2,4 @@
 branch = True
 omit =
     minikin/app.py
+    minikin/load_cache.py

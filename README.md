@@ -44,7 +44,8 @@ Server: nginx/1.14.0 (Ubuntu)
 
 - [aiohttp](https://github.com/aio-libs/aiohttp) HTTP server for asyncio
 - [asyncpg](https://github.com/MagicStack/asyncpg) A fast PostgreSQL Database Client Library for Python/asyncio
-- [postgresql](https://www.postgresql.org/) The world's most advanced open source relational database.
+- [postgresql](https://www.postgresql.org/) Used as the persistent data storage
+- [redis](https://redis.io) Used as data cache
 
 ## Installation
 
@@ -62,7 +63,7 @@ One table with two columns (slug and url) are the minimum needed. The slug, i.e.
 createdb -U postgres minikin
 psql -U postgres minikin <<EOF
 CREATE TABLE short_url (
-    slug CHAR(16),
+    slug CHAR(7),
     url TEXT,
     PRIMARY KEY (slug)
 );
@@ -108,12 +109,12 @@ Also because the process is deterministic, the system doesn't check if the url a
 
 ### concurrency model
 
-Event driven async socket is used instead of multi threading because it is in theory more efficient in handling heavy traffic. However, given that requests will be very short lived, thread pooling is probably also going to work well.
+Event driven async socket is used instead of multi threading because it can handle more concurrent requests with the same resource compared with threading concurrency model.
 
 
 ### database
 
-A relational database in Postgresql is picked instead of a NoSQL database. This is mainly because Postgresql is one of the better supported databases for asyncio/aiohttp and also there are repeated reports of Postgresql out performing NoSQL database. A key value store in theory should be better for the system.
+Both Postgresql and Redis have good support in asyncio. They work well togehter where Postgres is the persistent data storage and Redis sits in the front as the cache.
 
 
 ## Load Test Benchmark
@@ -125,34 +126,63 @@ start the load test:
 locust -f tests/load/locustfile.py --host=https://minik.in
 ```
 
+or use the script for running in master/slave mode for leveraging the multi-core CPU.
+
+run without web interface:
+```
+python tests/load/run.py --host https://minik.in -n 6 --concurrency 2000 --hatch-rate 500
+```
+
+run with web interface:
+```
+python tests/load/run.py --host https://minik.in -n 6 --web
+```
+
 <img src="benchmark.png"/>
 
 Load profile:
 
-- number of urls in db: 30k
-- number of concurrent users: 2,000
+- number of urls in db: 5 million
+- number of concurrent users: 1,000 ~ 5,000
 - traffic distribution
     * 10% POST /shorten_url
     * 10% GET /[NOT FOUND]
     * 80% GET /[FOUND]
 
-The machine under test:
+Server machine:
 
 - Cloud provider: Google Compute Engine
-- Type: n1-standard-1
-- Number of vCPU: 1
-- RAM: 3.75GB
+- Location: London
+- Number of vCPU: 2
+- RAM: 8GB
 - Hard driver: 30GB SSD
-- Monthly cost: $40
-- Number of processes: 4
+- Cost: $50/month
+- Number of processes: 5
 - Reverse proxy server: Nginx
+
+Test client machine:
+
+- Cloud provider: Vultr
+- Location: Amsterdam
+- Number of CPU: 6
+- RAM: 16GB
+
 
 Result:
 
-- Request Per Second: it servers around 400 when the concurrent user number is less than 1000. at 2000 it's between 200 and 250.
-- Error rate: around 1% all of which are connection errors
-- CPU utilisation: 30% - 80%
-- RAM: around 500MB
+- Request Per Second: 1,000 ~ 1,200
+- CPU utilisation: 80% ~ 100%
+- Error rates at  based 500,000 requests. These are all 502 Server Error: Bad Gateway. They are caused by upstream server under heavy load and becoming unavailable.
+    * 1,000 concurrent connections: 0
+    * 2,000 concurrent connections: 0.2%
+    * 3,000 concurrent connections: 0.6%
+    * 4,000 concurrent connections: 1.9%
+    * 5,000 concurrent connections: 2.8%
+
+Limitation:
+
+- the client is in a data center with fast internet connection, so this doesn't represent real world use case.
+- the database has only 5 million records, which is about 400MB, so the memory needed for cache is small.
 
 ## Scale up and out
 
@@ -160,7 +190,7 @@ Because the state is not shared and the shortening process is determnistic, it c
 
 ### get better hardware
 
-Increasing the number of CPU should have an immediate impact. With more data, bigger RAM and hard drive will also boost the performance.
+Increasing the number of CPU should have an immediate impact. With more data, bigger RAM and hard drive will be required to keep or imporove the performance.
 
 ### traffic routing
 

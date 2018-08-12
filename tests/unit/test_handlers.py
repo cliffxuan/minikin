@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-import asyncio
 import json
+from asyncio import Future
 from unittest.mock import Mock, patch
 
 from aiohttp import web
@@ -15,7 +15,7 @@ async def test_get_url_with_url_exists(aiohttp_client):
     app['pool'] = Mock()
     app['redis'] = Mock()
     client = await aiohttp_client(app)
-    future = asyncio.Future()
+    future = Future()
     dest = 'https://minik.in'
     with patch('minikin.handlers.db.get_url', return_value=future):
         future.set_result(dest)
@@ -30,9 +30,9 @@ async def test_get_url_with_url_not_exists(aiohttp_client):
     app['pool'] = Mock()
     app['redis'] = Mock()
     client = await aiohttp_client(app)
-    future = asyncio.Future()
+    future = Future()
     with patch('minikin.handlers.db.get_url', return_value=future):
-        future.set_exception(URLNotFound())
+        future.set_exception(URLNotFound('abc'))
         rsp = await client.get('/abc', allow_redirects=False)
     assert rsp.status == 404
 
@@ -44,7 +44,7 @@ async def test_shorten_url_body_correct_json_invalid_url(aiohttp_client):
     app['settings'] = {'length': 3, 'base_url': 'https://minik.in'}
     app.router.add_post('/', shorten_url)
     client = await aiohttp_client(app)
-    future = asyncio.Future()
+    future = Future()
     with patch('minikin.handlers.db.shorten_url', return_value=future):
         future.set_result(None)
         rsp = await client.post('/', data=json.dumps(
@@ -77,7 +77,7 @@ async def test_shorten_url_body_correct_json_valid_url(aiohttp_client):
     app['settings'] = {'length': 3, 'base_url': base_url}
     app.router.add_post('/', shorten_url)
     client = await aiohttp_client(app)
-    future = asyncio.Future()
+    future = Future()
     slug = 'abc'
     with patch('minikin.handlers.db.shorten_url', return_value=future):
         future.set_result(slug)

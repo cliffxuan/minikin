@@ -30,12 +30,12 @@ def get_logger() -> logging.Logger:
         },
         'handlers': {
             'console': {
-                'level': 'DEBUG',
+                'level': 'INFO',
                 'class': 'logging.StreamHandler',
                 'formatter': 'simple'
             },
             'file': {
-                'level': 'DEBUG',
+                'level': 'INFO',
                 'class': 'logging.FileHandler',
                 'filename': 'output.log',
                 'formatter': 'simple'
@@ -44,7 +44,7 @@ def get_logger() -> logging.Logger:
         'loggers': {
             'root': {
                 'handlers': ['console', 'file'],
-                'level': 'DEBUG'
+                'level': 'INFO'
             }
         }
     }

@@ -15,6 +15,9 @@ class URLNotFound(Exception):
     """
     url doesn't exist for slug
     """
+    def __init__(self, slug):
+        self.slug = slug
+        super().__init__(slug)
 
 
 async def write_to_redis_if_exists(key, value, redis: Redis=None):
@@ -62,5 +65,6 @@ async def get_url(pool: Pool, slug: str, redis: Redis=None) -> str:
             'SELECT * FROM short_url WHERE slug = $1', slug)
         if not record:
             raise URLNotFound(slug)
+        url = record['url']
         await write_to_redis_if_exists(slug, url, redis)
-        return record['url']
+        return url

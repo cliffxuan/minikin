@@ -43,7 +43,7 @@ async def shorten_url(
                 ON CONFLICT (slug) DO NOTHING;
                 ''', slug, url
             )
-    write_to_redis_if_exists(slug, url, redis)
+    await write_to_redis_if_exists(slug, url, redis)
     return slug
 
 
@@ -62,5 +62,5 @@ async def get_url(pool: Pool, slug: str, redis: Redis=None) -> str:
             'SELECT * FROM short_url WHERE slug = $1', slug)
         if not record:
             raise URLNotFound(slug)
-        write_to_redis_if_exists(slug, url, redis)
+        await write_to_redis_if_exists(slug, url, redis)
         return record['url']

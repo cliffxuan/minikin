@@ -10,7 +10,9 @@ from minikin.utils import generate_slug
 
 PWD = os.path.abspath(os.path.dirname(__file__))
 with open(os.path.join(PWD, 'slugs')) as fo:
-    slugs = deque(fo.readlines()[2:-2])  # ommit header and footer
+    slugs = deque([
+        row.split('|')[0].strip()
+        for row in fo.readlines()[2:-2]])  # ommit header and footer
 
 
 def gen_url():

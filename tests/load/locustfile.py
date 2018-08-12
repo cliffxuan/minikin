@@ -24,8 +24,9 @@ class Tasks(TaskSet):
     @task(1)
     def shorten_url(self):
         rsp = self.client.post("/shorten_url", json.dumps({"url": gen_url()}))
-        slug = rsp.json()['shortened_url'].split('/')[-1]
-        slugs.append(slug)
+        if rsp.ok:
+            slug = rsp.json()['shortened_url'].split('/')[-1]
+            slugs.append(slug)
 
     @task(1)
     def not_found(self):

@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-from asyncio import Future
-from typing import Optional
 from unittest.mock import Mock, patch
 
 from aioredis.commands import Redis
@@ -8,6 +6,7 @@ import pytest
 
 from minikin.db import (
     URLNotFound, write_to_redis_if_exists, shorten_url, get_url)
+from .helpers import FakeConnection, make_future
 
 
 async def test_write_to_redis_when_redis_is_none():
@@ -17,63 +16,17 @@ async def test_write_to_redis_when_redis_is_none():
 
 async def test_write_to_redis_succeed():
     redis = Mock(spec=Redis)
-    future = Future()
-    redis.set.return_value = future
-    future.set_result(True)
+    redis.set.return_value = make_future(True)
     result = await write_to_redis_if_exists('key', 'value', redis)
     assert result is None
 
 
 async def test_write_to_redis_throw_exception():
     redis = Mock(spec=Redis)
-    future = Future()
-    redis.set.return_value = future
-    future.set_exception(RuntimeError)
+    redis.set.return_value = make_future(exception=RuntimeError)
     with patch('minikin.db.logger') as logger:
         await write_to_redis_if_exists('key', 'value', redis)
     logger.warning.assert_called()
-
-
-class FakeConnection:
-
-    def __init__(self, return_values: Optional[dict]=None) -> None:
-        if return_values is None:
-            return_values = {}
-        self.return_values = return_values
-
-    def __aenter__(self):
-        future = Future()
-        future.set_result(self)
-        return future
-
-    def __aexit__(self, *args):
-        future = Future()
-        future.set_result(False)
-        return future
-
-    def transaction(self):
-        class _Transaction:
-
-            def __aenter__(self):
-                future = Future()
-                future.set_result(None)
-                return future
-
-            def __aexit__(self, *args):
-                future = Future()
-                future.set_result(False)
-                return future
-        return _Transaction()
-
-    def execute(self, *args, **kw):
-        future = Future()
-        future.set_result(self.return_values.get('execute'))
-        return future
-
-    def fetchrow(self, *args, **kw):
-        future = Future()
-        future.set_result(self.return_values.get('fetchrow'))
-        return future
 
 
 async def test_shorten_url():
@@ -96,9 +49,7 @@ async def test_get_url_found_in_redis():
     url = 'https://minik.in/long-url'
     pool = Mock()
     redis = Mock(spec=Redis)
-    future = Future()
-    future.set_result(url)
-    redis.get.return_value = future
+    redis.get.return_value = make_future(url)
     result = await get_url(pool, 'PTFeSGv', redis)
     assert result == url
     pool.acquire.assert_not_called()
@@ -110,11 +61,9 @@ async def test_get_url_not_found_in_redis_but_found_in_db():
         'acquire.return_value': FakeConnection({'fetchrow': {'url': url}})
     })
     redis = Mock(spec=Redis)
-    future = Future()
-    future.set_result(None)
-    redis.get.return_value = future
+    redis.get.return_value = make_future()
     with patch('minikin.db.write_to_redis_if_exists',
-               return_value=future) as patched:
+               return_value=make_future()) as patched:
         result = await get_url(pool, 'PTFeSGv', redis)
     assert result == url
     patched.assert_called_once()
@@ -124,9 +73,7 @@ async def test_get_url_not_found_in_redis_nor_db():
     slug = 'PTFeSGv'
     pool = Mock(**{'acquire.return_value': FakeConnection()})
     redis = Mock(spec=Redis)
-    future = Future()
-    future.set_result(None)
-    redis.get.return_value = future
+    redis.get.return_value = make_future()
     with pytest.raises(URLNotFound) as exc:
         await get_url(pool, slug, redis)
     assert exc.value.slug == slug

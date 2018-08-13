@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 import json
-from asyncio import Future
 from unittest.mock import Mock, patch
 
 from aiohttp import web
 
 from minikin.handlers import get_url, shorten_url, index
 from minikin.db import URLNotFound
+from .helpers import make_future
 
 
 async def test_get_url_with_url_exists(aiohttp_client):
@@ -15,10 +15,8 @@ async def test_get_url_with_url_exists(aiohttp_client):
     app['pool'] = Mock()
     app['redis'] = Mock()
     client = await aiohttp_client(app)
-    future = Future()
     dest = 'https://minik.in'
-    with patch('minikin.handlers.db.get_url', return_value=future):
-        future.set_result(dest)
+    with patch('minikin.handlers.db.get_url', return_value=make_future(dest)):
         rsp = await client.get('/abc', allow_redirects=False)
     assert rsp.status == 302
     assert rsp.headers['location'] == dest
@@ -30,9 +28,8 @@ async def test_get_url_with_url_not_exists(aiohttp_client):
     app['pool'] = Mock()
     app['redis'] = Mock()
     client = await aiohttp_client(app)
-    future = Future()
+    future = make_future(exception=URLNotFound('abc'))
     with patch('minikin.handlers.db.get_url', return_value=future):
-        future.set_exception(URLNotFound('abc'))
         rsp = await client.get('/abc', allow_redirects=False)
     assert rsp.status == 404
 
@@ -44,9 +41,7 @@ async def test_shorten_url_body_correct_json_invalid_url(aiohttp_client):
     app['settings'] = {'length': 3, 'base_url': 'https://minik.in'}
     app.router.add_post('/', shorten_url)
     client = await aiohttp_client(app)
-    future = Future()
-    with patch('minikin.handlers.db.shorten_url', return_value=future):
-        future.set_result(None)
+    with patch('minikin.handlers.db.shorten_url', return_value=make_future()):
         rsp = await client.post('/', data=json.dumps(
             {'url': 'not a valid url'}))
     assert rsp.status == 400
@@ -77,10 +72,9 @@ async def test_shorten_url_body_correct_json_valid_url(aiohttp_client):
     app['settings'] = {'length': 3, 'base_url': base_url}
     app.router.add_post('/', shorten_url)
     client = await aiohttp_client(app)
-    future = Future()
     slug = 'abc'
+    future = make_future(slug)
     with patch('minikin.handlers.db.shorten_url', return_value=future):
-        future.set_result(slug)
         rsp = await client.post('/', data=json.dumps(
             {'url': 'https://helloworld.com'}))
     assert rsp.status == 201
